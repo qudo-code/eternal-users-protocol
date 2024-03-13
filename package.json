@@ -1,10 +1,11 @@
 {
-  "name": "@solana-web-starter/source",
+  "name": "@eternal-users-protocol/source",
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {},
   "private": true,
   "devDependencies": {
+    "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
     "@nx/esbuild": "18.0.5",
     "@nx/eslint": "18.0.0",
     "@nx/eslint-plugin": "18.0.0",
@@ -48,11 +49,17 @@
     "ts-node": "10.9.1",
     "typescript": "~5.3.2",
     "vite": "^5.0.0",
+    "vite-plugin-node-polyfills": "^0.21.0",
     "vitest": "^1.0.4"
   },
   "dependencies": {
     "@fastify/autoload": "~5.7.1",
     "@fastify/sensible": "~5.2.0",
+    "@metaplex-foundation/digital-asset-standard-api": "^1.0.3",
+    "@metaplex-foundation/mpl-token-metadata": "^3.2.1",
+    "@metaplex-foundation/umi-bundle-defaults": "^0.9.1",
+    "@metaplex-foundation/umi-signer-wallet-adapters": "^0.9.1",
+    "@metaplex-foundation/umi-uploader-irys": "^0.9.1",
     "@solana/wallet-adapter-base": "^0.9.23",
     "@solana/wallet-adapter-react": "^0.15.35",
     "@solana/wallet-adapter-react-ui": "^0.9.35",

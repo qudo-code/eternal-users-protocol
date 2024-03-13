@@ -14,11 +14,12 @@ import { useMemo } from 'react'
 
 import { ConnectionProvider, WalletProvider, useWallet } from '@solana/wallet-adapter-react';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
-import { WalletModalProvider, WalletMultiButton } from '@solana/wallet-adapter-react-ui';
+import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import { clusterApiUrl } from '@solana/web3.js';
-import { BookText } from 'lucide-react';
 
-import { lib } from "@template-solana-web/lib";
+import { useEup } from "eternal-users-protocol";
+
+import { Nav } from './components/nav';
 
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-ignore
@@ -33,11 +34,6 @@ function Root() {
 
   // You can also provide a custom RPC endpoint.
   const endpoint = useMemo(() => clusterApiUrl(network), [network]);
-
-  useEffect(() => {
-    // I am a library
-    lib();
-  }, []);
 
   return (
     <StrictMode>
@@ -54,35 +50,10 @@ function Root() {
   )
 }
 
-function Nav() {
-  const { publicKey, connected } = useWallet();
-
-
-
-  return (
-    <nav className="sticky top-0 flex justify-between items-center w-screen px-6 py-3 z-10">
-    <h2 className="text-2xl font-semibold">Template</h2>
-    <div className="flex gap-3 flex-wrap">
-        <a href="/" className="btn btn-outline">
-            <span>
-                <BookText size={16} />
-            </span>
-            Docs
-        </a>
-        <WalletMultiButton>
-            {connected ? `${publicKey?.toBase58().slice(0, 6)}...` : <>
-                <p>
-                    Connect Wallet
-                </p>
-            </>}
-        </WalletMultiButton>
-    </div>
-    </nav>
-  );
-}
-
 // Content
 function App() {
+  const eup = useEup();
+
   return (
     <>
       <Nav />

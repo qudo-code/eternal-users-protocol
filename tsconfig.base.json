@@ -15,7 +15,7 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@template-solana-web/lib": ["packages/lib/src/index.ts"]
+      "eternal-users-protocol": ["packages/eternal-users-protocol/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

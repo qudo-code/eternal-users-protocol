@@ -1,83 +1,76 @@
+# Eternal Users Protocol
+A user profiles protocol stored on Arweave, verified on Solana via compressed NFTs.
 
-![header](/doc/header.png)
-# Solana Web Starter Template
-- React app with React Router, Tailwind, DaisyUI and Solana Wallet Adapter.
-- Fastify API
-- Shared lib/package
+## React Usage
 
-## Develop
-### We use `pnpm` for packages
-1. Install node 20+ if you don't have it: https://nodejs.org/en
-2. Install pnpm if you don't have it: `npm i -g pnpm`.
-3. Install NX CLI if you don't have it: `pnpm i -g nx`.
-
-### We use Nx to manage apps
-https://nx.dev/getting-started/intro
-
-### We use Railway for hosting
-https://railway.app/
-
-## Development
-Start apps by running `npx nx serve [appname]`.
-
-### Web App
-To start the included React app run `npx nx serve web`.
-
-### Api
-To start the included Fastify API run `npx nx serve api`.
-
-### Lib
-Put things you want shared across apps such as types and utilities in `./packages/lib`.
-
-**Usage**
-
-`import { lib } from "@template--solana-web-app/lib"`
-
-### Add Apps
-View the available NX generators here.
-https://nx.dev/nx-api
-
-## Deploy
-To deploy the included apps on a platform like Railway, we use the following settings:
-
-### Static Web App
-To deploy a static website like the React app, you can serve it like this.
-
-**Build Command**
-```
-npx nx build web
+### Prerequisites
+Ensure your app has Solana wallet adapter and required providers. EUP will utilize the `useWallet` hook.
+https://github.com/anza-xyz/wallet-adapter
+```jsx
+function App() {
+    return (
+        <ConnectionProvider endpoint={endpoint}>
+          <WalletProvider wallets={[]}>
+              <WalletModalProvider>
+                <OtherComponent />
+              </WalletModalProvider>
+          </WalletProvider>
+        </ConnectionProvider>
+    )
+}
 ```
 
-**Watch Paths**
-```
-/apps/web
-```
+### Create/Update User
+Create or update a user profile via the `update` method. This will create a profile if one doesn't already exist or update existing. This flow consists of uploading metadata to Arweave then minting or updating the users profile NFT.
+_Expect about three wallet popups (fund upload, sign upload, mint/update NFT)_
 
-**Start Command**
-```
-npx http-server ./dist/apps/web
-```
+```jsx
+import { useEup } from "eternal-users-protocol";
 
-### Node App
-To deploy a Node app like the API, you can directly start it like this.
+import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
+import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
+import { WalletModalProvider, WalletMultiButton } from '@solana/wallet-adapter-react-ui';
+import { clusterApiUrl } from '@solana/web3.js';
 
-**Build Command**
-```
-npx nx build api
-```
+async function OtherComponent() {
+    // The network can be set to 'devnet', 'testnet', or 'mainnet-beta'.
+    const network = WalletAdapterNetwork.Devnet;
 
-**Watch Paths**
-```
-/apps/api
-```
+    // You can also provide a custom RPC endpoint.
+    const endpoint = useMemo(() => clusterApiUrl(network), [network]);
 
-**Start Command**
+    // Initialize EUP
+    const eup = useEup(endpoint);
+
+    return (
+        <ConnectionProvider endpoint={endpoint}>
+            <WalletProvider wallets={[]}>
+                <WalletModalProvider>
+                    <WalletMultiButton />
+                    <input type="text" onChange={eup.set.name}>
+                    <input type="file" onChange={eup.set.image}>
+                    <button onClick={eup.update}>Update</button>
+                </WalletModalProvider>
+            </WalletProvider>
+        </ConnectionProvider>
+    )
+}
 ```
-node ./dist/apps/api
-```
+### Values
+_Read only values_
+#### `eup.draft`
+Get the current pending/drafted details.
+#### `eup.value`
+Get the current on-chain details.
+#### `eup.state`
+Get loading state ("resting", "uploading", "updating", "error")
 
-<hr>
-
-**_WIP_**
-
-_This is still a WIP. It would be nice to add example Anchor integration as well._
+### Methods
+#### `eup.set.name`, `eup.set.image`
+Setters for updating the`draft` state.
+#### `eup.save`
+Save the drafted user details on-chain.
+#### `eup.add.item`
+Associate a piece of metadata to a user such as a badge or achievement. 
+#### `eup.reset`
+Clear drafted user details and revert to existing on-chain deatils.
