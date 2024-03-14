@@ -89,10 +89,10 @@ export function Profile()  {
     useEffect(() => {
         if(firstTime) {
             setEditing(true);
-        } else if(eup.state === "resting" && !eup.user.id){
+        } else if(!wallet.connected && editing){
             setEditing(false);
         }
-    }, [firstTime]);
+    }, [firstTime, wallet.connected]);
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -146,7 +146,7 @@ export function Profile()  {
                                     <input type="text" className="input input-text input-bordered mb-3 w-full" placeholder="" onChange={eup.input.name} value={eup.draft.name}/>
                                     <div className="flex justify-between">
                                         <p className="text-xs mb-1">Description</p>
-                                        <p className="text-xs mb-1">{eup.draft.description?.length} / 200</p>
+                                        <p className="text-xs mb-1">{eup?.draft?.description?.length || 0} / 200</p>
                                     </div>
                                     <textarea rows={3} maxLength={200} className="textarea text-[1rem] input-bordered w-full min-h-2xl mb-2" placeholder="" onChange={eup.input.description} value={eup.draft.description}></textarea>
 
