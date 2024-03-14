@@ -142,12 +142,15 @@ export function Profile()  {
                                         })}
                                     </div>
                                     <input type="file" className="hidden" onChange={eup.input.image} ref={fileInputRef} />
+                                    
                                     <p className="text-xs mb-1">Name</p>
                                     <input type="text" className="input input-text input-bordered mb-3 w-full" placeholder="" onChange={eup.input.name} value={eup.draft.name}/>
+                                    
                                     <div className="flex justify-between">
                                         <p className="text-xs mb-1">Description</p>
                                         <p className="text-xs mb-1">{eup?.draft?.description?.length || 0} / 200</p>
                                     </div>
+                                    
                                     <textarea rows={3} maxLength={200} className="textarea text-[1rem] input-bordered w-full min-h-2xl mb-2" placeholder="" onChange={eup.input.description} value={eup.draft.description}></textarea>
 
                                     <p className="text-xs mb-1">Twitter</p>
