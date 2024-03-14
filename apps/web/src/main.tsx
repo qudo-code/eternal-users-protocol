@@ -57,7 +57,7 @@ function App() {
   return (
     <>
       <Nav />
-      <main className="min-h-screen mx-auto max-w-4xl">
+      <main className="min-h-screen mx-auto max-w-4xl pt-10">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/:id" element={<Profile />} />

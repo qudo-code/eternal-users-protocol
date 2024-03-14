@@ -29,6 +29,7 @@ export type Eup = {
     user: User
     state: State,
     error: string,
+    isNew: boolean,
 
     // Methods
     save: () => void

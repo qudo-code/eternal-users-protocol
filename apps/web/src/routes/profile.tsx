@@ -1,35 +1,112 @@
 import { useEup, COLORS, RPC_ENDPOINT } from "eternal-users-protocol";
-import { useState } from "react";
-import { Edit, Upload } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ChevronRight, Edit, ExternalLink, Upload } from "lucide-react";
 import { useRef } from 'react';
+import { useWallet } from '@solana/wallet-adapter-react';
+
+import { useParams } from 'react-router-dom';
+
+
+const LINK_METADATA: Record<string, {
+    name: string,
+    icon: string,
+    prefix?: string
+}> = {
+    twitter: {
+        name: "Twitter",
+        icon: "/x-logo.svg",
+        prefix: "https://twitter.com/"
+    },
+    discord: {
+        name: "Discord",
+        icon: "/discord-logo.svg",
+    },
+    telegram: {
+        name: "Telegram",
+        icon: "/telegram-logo.svg",
+    },
+    website: {
+        name: "Website",
+        icon: "/x-logo.svg",
+        prefix: ""
+    }
+}
+
+type LINK = keyof typeof LINK_METADATA;
+
+function LinkCard(props: {type: LINK, value: string}) {
+    let trimmed = props.value?.replace("@", "");
+
+    const link = LINK_METADATA[props?.type];
+
+    return (
+        <a href={link?.prefix ? link?.prefix + trimmed : ""} className={`btn btn-secondary w-full flex justify-between ${link?.prefix !== undefined ? "" : "pointer-events-none"}`}>
+            <div className="flex items-center gap-3">
+                <img src={link?.icon} className="h-4 aspect-square" alt="" />
+                {trimmed}
+            </div>
+            
+            {link?.prefix !== undefined && (
+                <div>
+                    <ExternalLink size={18} />
+                </div>
+            )}
+        </a>
+    )
+}
+
+function Loader() {
+    return (
+        <div className="shadow rounded">
+            <div className="h-[10rem]"></div>
+            <div className="aspect-square rounded-full max-w-[15rem] w-full bg-gray-800 mx-auto shadow-lg -translate-y-1/2 -mb-24 animate-pulse"></div>
+            <div className="p-5">
+                <div className="animate-pulse h-6 w-1/2 bg-gray-800 rounded mb-2"></div>
+                <div className="animate-pulse h-4 w-full bg-gray-800 rounded mb-2"></div>
+                <div className="animate-pulse h-4 w-full bg-gray-800 rounded mb-2"></div>
+                <div className="animate-pulse h-4 w-full bg-gray-800 rounded mb-2"></div>
+            </div>
+        </div>
+    )
+}
 
 export function Profile()  {
     const [ editing, setEditing ] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const wallet = useWallet();
 
-    console.log({RPC_ENDPOINT})
+    let { id: userId } = useParams();
 
     const eup = useEup();
 
     const image = editing ? (eup.draft.image || eup.user.image) : eup.user.image;
     const color = editing ? eup.draft.color || eup.user.color : eup.user.color || "green";
-    const loading = eup.state === "fetching" || !eup.state || !eup.user.id;
+    const isOwner = wallet?.publicKey?.toBase58() === userId;
+    const firstTime = isOwner && eup.state === "resting" && !eup.user.id;
+    const isNew = eup.state === "resting" && !eup.user.id;
+    const loading = eup.state === "fetching";
+
+    useEffect(() => {
+        if(firstTime) {
+            setEditing(true);
+        }
+    }, [firstTime]);
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    })
 
     return (
         <div className="w-full max-w-xl mx-auto relative">
-            {eup.state === "fetching" || !eup.state || !eup.user.id ? (
-                 <div className="shadow rounded">
-                    <div className="h-[10rem]"></div>
-                    <div className="aspect-square rounded-full max-w-[15rem] w-full bg-gray-800 mx-auto shadow-lg -translate-y-1/2 -mb-24 animate-pulse"></div>
-                    <div className="p-5">
-                        <div className="animate-pulse h-6 w-1/2 bg-gray-800 rounded mb-2"></div>
-                        <div className="animate-pulse h-4 w-full bg-gray-800 rounded mb-2"></div>
-                        <div className="animate-pulse h-4 w-full bg-gray-800 rounded mb-2"></div>
-                        <div className="animate-pulse h-4 w-full bg-gray-800 rounded mb-2"></div>
-                    </div>
-                 </div>
+            {loading ? (
+                <Loader />
             ) : (
-                <div className={`shadow rounded-xl border overflow-hidden ${loading ? "ponter-events-none opacity-50" : ""}`}>
+                <div className={`shadow rounded-xl border overflow-hidden ${loading ? "pointer-events-none opacity-30" : ""}`}>
+                    {isNew && (
+                        <div>
+                            <p>This user hasn't setup their profile. If you own this public key, connect your wallet to edit your profile.</p>
+                        </div>
+                    )}
                     <div className={`bg-gradient-to-t color-${color} h-[10rem]`}></div>
                     <div className="relative max-w-[15rem] mx-auto -translate-y-1/2 -mb-32">
                         <img src={image} alt="" className="aspect-square rounded-full shadow-lg w-full"/>
@@ -70,41 +147,60 @@ export function Profile()  {
                                     <p className="text-xs mb-1">Website</p>
                                     <input type="text" className="input input-text input-bordered mb-3 w-full" onChange={eup.input.website} value={eup.draft.website}/>
                                     
-
-                                    {eup.state === "uploading" ? (
-                                        <button className="btn btn-secondary pointer-events-none">
-                                            Uploading metadata...
-                                        </button>
-                                    ) : eup.state === "updating" ? (
-                                        <button className="btn btn-secondary pointer-events-none">
-                                            Uploading metadata...
-                                        </button>
-                                    ) : (
-                                        <div className="flex my-3 gap-3">
-                                            <button className="btn btn-secondary w-1/4" onClick={() => setEditing(false)}>
-                                                Cancel
+                                    <div>
+                                        {eup.state === "uploading" ? (
+                                            <button className="btn btn-secondary pointer-events-none w-full loading">
+                                                Uploading metadata...
                                             </button>
-                                            <button className="btn btn-accent grow" onClick={eup.save}>
-                                                Save
+                                        ) : eup.state === "updating" ? (
+                                            <button className="btn btn-secondary pointer-events-none w-full loading">
+                                                Uploading metadata...
                                             </button>
-                                        </div>
-                                    )}
+                                        ) : (
+                                            <div className="flex my-3 gap-3">
+                                                <button className="btn btn-secondary w-1/4" onClick={() => setEditing(false)}>
+                                                    Cancel
+                                                </button>
+                                                <button className="btn btn-accent grow" onClick={eup.save}>
+                                                    Save
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
                                 </>
                             ) : (
-                                <>
-                                    <button className="absolute right-5 top-5" onClick={() => (setEditing(true))}>
-                                        <Edit size={24} />
-                                    </button>
+                                <>  
+                                    {isOwner && (
+                                        <button className="absolute right-5 top-5" onClick={() => (setEditing(true))}>
+                                            <Edit size={24} />
+                                        </button>
+                                    )}
                                     <h2 className="text-4xl font-semibold">{eup.user.name}</h2>
+
                                     <p>{eup.user.description}</p>
-                                    <div className="">
-                                        <p className="font-semibold">Links</p>
-                                    </div>
+
+                                    {eup.user.twitter || eup.user.discord || eup.user.telegram || eup.user.website ? (
+                                        <>
+                                            <div className="flex flex-col gap-3 my-3">
+                                                {eup.user.twitter && (
+                                                    <LinkCard type="twitter" value={eup.user.twitter} />
+                                                )}
+                                                {eup.user.discord && (
+                                                    <LinkCard type="discord" value={eup.user.discord} />
+                                                )}
+                                                {eup.user.telegram && (
+                                                    <LinkCard type="telegram" value={eup.user.telegram} />
+                                                )}
+                                                {eup.user.website && (
+                                                    <LinkCard type="website" value={eup.user.website} />
+                                                )}
+                                            </div>
+                                        </>
+                                    ): null}
                                 </>
                             )
                         }
                     </div>
-
                 </div>
             )}
         </div>

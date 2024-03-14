@@ -1,4 +1,4 @@
-import type { Eup, State, User, DraftUser, Color } from './types';
+import { type Eup, type State, type User, type DraftUser, type Color, COLORS } from './types';
 
 import { createUmi } from '@metaplex-foundation/umi-bundle-defaults'
 import { walletAdapterIdentity, type WalletAdapter } from '@metaplex-foundation/umi-signer-wallet-adapters'
@@ -14,9 +14,11 @@ import {
     findLeafAssetIdPda,
     mintToCollectionV1,
     parseLeafFromMintToCollectionV1Transaction,
+    getAssetWithProof,
+    updateMetadata,
 } from '@metaplex-foundation/mpl-bubblegum';
 import { useParams } from 'react-router-dom';
-
+import { AvatarGenerator } from 'random-avatar-generator';
 
 // Devnet
 export const COLLECTION = "8NUeQo6mEKaWEuc8kWQaRoSj2rP8SQWSy8JBKaVdw8jJ";
@@ -49,27 +51,58 @@ export function useEup(rpc: string = RPC_ENDPOINT): Eup {
 
     const [ state, setState ] = useState<State>("fetching");
     const [ error, setError ] = useState<string>("");
+    const [ isNew, setIsNew ] = useState<boolean>(false);
 
     const wallet = useWallet();
 
     const umi = useUmi(wallet, rpc);
+    const rpcUmi = createUmi(rpc);
+    rpcUmi.use(dasApi());
 
     async function resolveUser() {
+        setState("fetching");
+        
         try {
-            const response = await umi.rpc.searchAssets({
+            const response = await rpcUmi.rpc.searchAssets({
                 grouping: ["collection", COLLECTION],
                 creator: publicKey(userId),
+                owner: publicKey(userId),
                 creatorVerified: true,
                 compressed: true,
                 page: 1, // Starts at 1
                 limit: 1000
             });
 
+            // If no user, they will be sent to the editor so prefill some placeholder data
+            if(response.items.length === 0) {
+                const generator = new AvatarGenerator();
+ 
+                // Simply get a random avatar
+                generator.generateRandomAvatar();
+                
+                setState("resting");
+
+                const randomArrayItem = (array: any[]) => array[Math.floor(Math.random() * array.length)];
+                
+                setUser({
+                    color: randomArrayItem(COLORS),
+                    image: generator.generateRandomAvatar(String(Date.now())),
+                } as User);
+
+                setDraft({
+                    color: randomArrayItem(COLORS),
+                    image: generator.generateRandomAvatar(String(Date.now())),
+                } as User);
+                
+                setIsNew(true);
+
+                return;
+            }
+
             const [ profileNft ] = response.items.reverse();
 
             const metadata = await fetch(profileNft.content.json_uri).then((res) => res.json());
-            
-            console.log("METADATA", metadata)
+
             const user = {
                 id: profileNft.id,
                 name: metadata.name,
@@ -79,7 +112,7 @@ export function useEup(rpc: string = RPC_ENDPOINT): Eup {
                 discord: metadata.discord,
                 twitter: metadata.twitter,
                 telegram: metadata.telegram,
-                website: metadata.website
+                website: metadata.website,
             } as User;
 
             if(!user) return;
@@ -96,7 +129,7 @@ export function useEup(rpc: string = RPC_ENDPOINT): Eup {
         }
     }
 
-    async function save(user: User) {
+    async function save(data: User) {
         setError("");
         setState("uploading");
 
@@ -104,42 +137,58 @@ export function useEup(rpc: string = RPC_ENDPOINT): Eup {
             const tree = publicKey(MERKLE_TREE);
             const collection = publicKey(COLLECTION);
         
-            const uri = await umi.uploader.uploadJson(user);
+            const uri = await umi.uploader.uploadJson(data);
 
             setState("updating");
 
-            const { signature } = await mintToCollectionV1(umi, {
-                leafOwner: umi.payer.publicKey,
-                merkleTree: tree,
-                collectionMint: collection, 
-                payer: umi.payer,
-                metadata: {
-                    name: user.name,
+            if(user.id) {
+                const assetWithProof = await getAssetWithProof(umi, publicKey(user.id));
+              
+                const update = await updateMetadata(umi, {
+                  ...assetWithProof,
+                  leafOwner: assetWithProof.leafOwner,
+                  currentMetadata: assetWithProof.metadata,
+                  updateArgs: {
+                    name: data.name,
                     uri: uri,
-                    sellerFeeBasisPoints: 0,
-                    collection: { key: collection, verified: true },
-                    creators: [
-                        {
-                            address: umi.identity.publicKey,
-                            verified: true,
-                            share: 100
-                        },
-                    ],
-                },
-            })
-            .sendAndConfirm(umi);
-
-            const leaf: LeafSchema = await parseLeafFromMintToCollectionV1Transaction(
-                umi,
-                signature
-            );
+                  },
+                  authority: umi.payer,
+                  collectionMint: publicKey(COLLECTION),
+                }).sendAndConfirm(umi);
+            } else {    
+                const { signature } = await mintToCollectionV1(umi, {
+                    leafOwner: umi.payer.publicKey,
+                    merkleTree: tree,
+                    collectionMint: collection, 
+                    payer: umi.payer,
+                    metadata: {
+                        name: user.name,
+                        uri: uri,
+                        sellerFeeBasisPoints: 0,
+                        collection: { key: collection, verified: true },
+                        creators: [
+                            {
+                                address: umi.identity.publicKey,
+                                verified: true,
+                                share: 100
+                            },
+                        ],
+                    },
+                })
+                .sendAndConfirm(umi);
     
-            const assetId = findLeafAssetIdPda(umi, {
-                merkleTree: tree,
-                leafIndex: leaf.nonce,
-            })[0];
-    
-            setState("resting");
+                const leaf: LeafSchema = await parseLeafFromMintToCollectionV1Transaction(
+                    umi,
+                    signature
+                );
+        
+                const assetId = findLeafAssetIdPda(umi, {
+                    merkleTree: tree,
+                    leafIndex: leaf.nonce,
+                })[0];
+            }
+                
+            window.location.reload()
         } catch (error) {
             console.log(error);
             setState("error");
@@ -149,20 +198,17 @@ export function useEup(rpc: string = RPC_ENDPOINT): Eup {
 
     // Init client & resolve user whenever wallet changes 
     useEffect(() => {
-        if(
-            !wallet.publicKey ||
-            !wallet.connected ||
-            user.id
-        ) return;
-        
+        if(!umi || !rpcUmi) return;
+
         resolveUser()
-    }, [wallet.publicKey, wallet.connected]);
+    }, [wallet.publicKey, wallet.connected, userId]);
 
     return {
         draft,
         user,
         state,
         error,
+        isNew,
 
         save: () => save(draft),
         reset: () => (setDraft({
