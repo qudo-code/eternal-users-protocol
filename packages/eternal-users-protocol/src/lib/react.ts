@@ -22,9 +22,14 @@ import { AvatarGenerator } from 'random-avatar-generator';
 import { useNavigate } from 'react-router-dom';
 
 // Devnet
-export const COLLECTION = "8NUeQo6mEKaWEuc8kWQaRoSj2rP8SQWSy8JBKaVdw8jJ";
-export const MERKLE_TREE = "FCY1zKx6MoMud2icXbnjwdznNGVKMCRp9NFL1x5Hi6Tv";
-export const RPC_ENDPOINT = "https://devnet.admin6074.workers.dev/"
+// export const COLLECTION = "8NUeQo6mEKaWEuc8kWQaRoSj2rP8SQWSy8JBKaVdw8jJ";
+// export const MERKLE_TREE = "FCY1zKx6MoMud2icXbnjwdznNGVKMCRp9NFL1x5Hi6Tv";
+// export const RPC_ENDPOINT = "https://devnet.admin6074.workers.dev/"
+
+// Mainnet
+export const COLLECTION = "6jVVjSpnztstLqutrzgVBeByQXMwxgAPsyQTSMQfywz2";
+export const MERKLE_TREE = "3dCUyLSmfeYB2vVZPHWfoAjCpxijqNGGDPRPeKgZNAAt";
+export const RPC_ENDPOINT = "https://mainnet.admin6074.workers.dev/"
 
 export const useUmi = (wallet: WalletAdapter, rpc: string) => {
   const umi = createUmi(rpc, { commitment: 'confirmed' });

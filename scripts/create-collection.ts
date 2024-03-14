@@ -8,6 +8,7 @@ import { irysUploader } from "@metaplex-foundation/umi-uploader-irys"
 import { keypairIdentity } from '@metaplex-foundation/umi';
 import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
 import { mplTokenMetadata } from '@metaplex-foundation/mpl-token-metadata'
+import { setComputeUnitPrice } from '@metaplex-foundation/mpl-toolbox';
 
 export const toBytes = (pk) => new Uint8Array(Array.from(JSON.parse(pk)));
 
@@ -48,23 +49,31 @@ export const toBytes = (pk) => new Uint8Array(Array.from(JSON.parse(pk)));
     
     console.log("Creating new collection...");
 
-    const result = await createV1(umi, {
-        mint: collectionMint,
-        name: 'Eternal Users Protocol',
-        uri: jsonUri,
-        sellerFeeBasisPoints: percentAmount(0),
-        isCollection: true,
-        tokenStandard: TokenStandard.NonFungible,
-    }).sendAndConfirm(umi);
-
-    console.log("Minting new collection...");
-
-    const mintResult = await mintV1(umi, {
-        mint: collectionMint.publicKey,
-        amount: 1,
-        tokenOwner: umi.payer.publicKey,
-        tokenStandard: TokenStandard.NonFungible,
-    }).sendAndConfirm(umi);
-
-    console.log("✅ Collection created!\nMint: ", collectionMint.publicKey);
+    try {
+        const result = await createV1(umi, {
+            mint: collectionMint,
+            name: 'Eternal Users Protocol',
+            uri: jsonUri,
+            sellerFeeBasisPoints: percentAmount(0),
+            isCollection: true,
+            tokenStandard: TokenStandard.NonFungible,
+        })
+        .append(setComputeUnitPrice(umi, { microLamports: 5 }))
+        .sendAndConfirm(umi);
+    
+        console.log("Minting new collection...");
+    
+        const mintResult = await mintV1(umi, {
+            mint: collectionMint.publicKey,
+            amount: 1,
+            tokenOwner: umi.payer.publicKey,
+            tokenStandard: TokenStandard.NonFungible,
+        })
+        .append(setComputeUnitPrice(umi, { microLamports: 5 }))
+        .sendAndConfirm(umi);
+    
+        console.log("✅ Collection created!\nMint: ", collectionMint.publicKey);
+    } catch(error) {
+        console.log(error);
+    }
 })();
