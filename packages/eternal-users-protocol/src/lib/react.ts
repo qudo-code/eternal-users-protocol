@@ -32,9 +32,9 @@ export const MERKLE_TREE = "3dCUyLSmfeYB2vVZPHWfoAjCpxijqNGGDPRPeKgZNAAt";
 export const RPC_ENDPOINT = "https://mainnet.admin6074.workers.dev/"
 
 export const useUmi = (wallet: WalletAdapter, rpc: string) => {
-  const umi = createUmi(rpc, { commitment: 'confirmed' });
+  const umi = createUmi(rpc);
   umi
-    .use(irysUploader({ priceMultiplier: 2 }))
+    .use(irysUploader({ priceMultiplier: 5 }))
     .use(mplTokenMetadata())
     .use(dasApi())
     .use(walletAdapterIdentity(wallet));
@@ -163,7 +163,8 @@ export function useEup(rpc: string = RPC_ENDPOINT): Eup {
                   },
                   authority: umi.payer,
                   collectionMint: publicKey(COLLECTION),
-                }).sendAndConfirm(umi);
+                })
+                .sendAndConfirm(umi);
             } else {    
                 const { signature } = await mintToCollectionV1(umi, {
                     leafOwner: umi.payer.publicKey,
