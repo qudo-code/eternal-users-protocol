@@ -2,7 +2,9 @@
   "name": "@eternal-users-protocol/source",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "start": "caddy run --config Caddyfile"
+  },
   "private": true,
   "devDependencies": {
     "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
