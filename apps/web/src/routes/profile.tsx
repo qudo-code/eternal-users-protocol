@@ -89,7 +89,7 @@ export function Profile()  {
     useEffect(() => {
         if(firstTime) {
             setEditing(true);
-        } else {
+        } else if(eup.state === "resting" && !eup.user.id){
             setEditing(false);
         }
     }, [firstTime]);
@@ -133,7 +133,7 @@ export function Profile()  {
                         {
                             editing ?
                             (   <>  
-                                    <p className="teDiBRPe3LBFTQs8WmDqyMqDW91F2XpAbAqeGJkrE8J2KHxt-xs mb-1">Theme</p>
+                                    <p className="teDiBRPe3LBFTQs8WmDqyMqDW91F2XpAbAqeGJkrE8J2KHxt-xs mb-1 text-xs">Theme</p>
                                     <div className="flex gap-2 mb-4">
                                         {COLORS.map((color) => {
                                             return (
