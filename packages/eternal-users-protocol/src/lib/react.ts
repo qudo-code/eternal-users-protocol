@@ -19,6 +19,7 @@ import {
 } from '@metaplex-foundation/mpl-bubblegum';
 import { useParams } from 'react-router-dom';
 import { AvatarGenerator } from 'random-avatar-generator';
+import { useNavigate } from 'react-router-dom';
 
 // Devnet
 export const COLLECTION = "8NUeQo6mEKaWEuc8kWQaRoSj2rP8SQWSy8JBKaVdw8jJ";
@@ -52,6 +53,9 @@ export function useEup(rpc: string = RPC_ENDPOINT): Eup {
     const [ state, setState ] = useState<State>("fetching");
     const [ error, setError ] = useState<string>("");
     const [ isNew, setIsNew ] = useState<boolean>(false);
+
+    const navigate = useNavigate();
+
 
     const wallet = useWallet();
 
@@ -187,8 +191,8 @@ export function useEup(rpc: string = RPC_ENDPOINT): Eup {
                     leafIndex: leaf.nonce,
                 })[0];
             }
-                
-            window.location.reload()
+            
+            window.location.reload();
         } catch (error) {
             console.log(error);
             setState("error");
@@ -198,7 +202,7 @@ export function useEup(rpc: string = RPC_ENDPOINT): Eup {
 
     // Init client & resolve user whenever wallet changes 
     useEffect(() => {
-        if(!umi || !rpcUmi) return;
+        if(!umi || !rpcUmi || user.id) return;
 
         resolveUser()
     }, [wallet.publicKey, wallet.connected, userId]);

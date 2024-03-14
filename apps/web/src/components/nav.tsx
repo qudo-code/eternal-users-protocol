@@ -6,8 +6,11 @@ export function Nav() {
     const { publicKey, connected } = useWallet();
   
     return (
-      <nav className="sticky top-0 flex justify-between items-center px-6 py-3 z-10">
-        <h2 className="text-2xl font-semibold">EUP</h2>
+      <nav className="sticky nav top-0 flex justify-between items-center px-6 py-3 z-10">
+        <a className="text-2xl font-semibold" href="/">
+            <p>EUP</p>
+            <p className="text-xs opacity-50">Eternal Users Protocol</p>
+        </a>
         <div className="flex gap-3 flex-wrap">
             {publicKey && connected && (
                 <a href={`/#/${publicKey?.toBase58()}`} className="btn btn-outline">

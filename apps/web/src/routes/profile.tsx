@@ -1,11 +1,10 @@
 import { useEup, COLORS, RPC_ENDPOINT } from "eternal-users-protocol";
 import { useEffect, useState } from "react";
-import { ChevronRight, Edit, ExternalLink, Upload } from "lucide-react";
+import { Edit, ExternalLink, Info, Loader2, Upload } from "lucide-react";
 import { useRef } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 
 import { useParams } from 'react-router-dom';
-
 
 const LINK_METADATA: Record<string, {
     name: string,
@@ -27,7 +26,7 @@ const LINK_METADATA: Record<string, {
     },
     website: {
         name: "Website",
-        icon: "/x-logo.svg",
+        icon: "/globe.svg",
         prefix: ""
     }
 }
@@ -82,13 +81,16 @@ export function Profile()  {
     const image = editing ? (eup.draft.image || eup.user.image) : eup.user.image;
     const color = editing ? eup.draft.color || eup.user.color : eup.user.color || "green";
     const isOwner = wallet?.publicKey?.toBase58() === userId;
-    const firstTime = isOwner && eup.state === "resting" && !eup.user.id;
+    const firstTime = isOwner && eup.state === "resting" && !eup.user.id && wallet.connected;
     const isNew = eup.state === "resting" && !eup.user.id;
     const loading = eup.state === "fetching";
+    const updating = eup.state === "updating" || eup.state === "uploading";
 
     useEffect(() => {
         if(firstTime) {
             setEditing(true);
+        } else {
+            setEditing(false);
         }
     }, [firstTime]);
 
@@ -97,16 +99,26 @@ export function Profile()  {
     })
 
     return (
-        <div className="w-full max-w-xl mx-auto relative">
+        <div className="w-full max-w-xl mx-auto relative min-h-screen">
             {loading ? (
                 <Loader />
             ) : (
-                <div className={`shadow rounded-xl border overflow-hidden ${loading ? "pointer-events-none opacity-30" : ""}`}>
-                    {isNew && (
-                        <div>
-                            <p>This user hasn't setup their profile. If you own this public key, connect your wallet to edit your profile.</p>
-                        </div>
-                    )}
+                <>
+                {isNew && !editing && (
+                    <div role="alert" className="alert">
+                        <Info size={18} className="mr-2"/>
+                        <span>This profile isn't setup yet. If you own this public key, conncet wallet to edit.</span>
+                    </div>
+                )}
+                {editing && (
+                    <>
+                        <h2 className="text-3xl font-semibold">
+                            Edit Profile
+                        </h2>
+                        <p className="mb-3 opacity-50">{userId}</p>
+                    </>
+                )}
+                <div className={`shadow rounded-xl border overflow-hidden ${updating ? "pointer-events-none opacity-30" : ""}`}>
                     <div className={`bg-gradient-to-t color-${color} h-[10rem]`}></div>
                     <div className="relative max-w-[15rem] mx-auto -translate-y-1/2 -mb-32">
                         <img src={image} alt="" className="aspect-square rounded-full shadow-lg w-full"/>
@@ -121,7 +133,7 @@ export function Profile()  {
                         {
                             editing ?
                             (   <>  
-                                    <p className="text-xs mb-1">Theme</p>
+                                    <p className="teDiBRPe3LBFTQs8WmDqyMqDW91F2XpAbAqeGJkrE8J2KHxt-xs mb-1">Theme</p>
                                     <div className="flex gap-2 mb-4">
                                         {COLORS.map((color) => {
                                             return (
@@ -147,15 +159,17 @@ export function Profile()  {
                                     <p className="text-xs mb-1">Website</p>
                                     <input type="text" className="input input-text input-bordered mb-3 w-full" onChange={eup.input.website} value={eup.draft.website}/>
                                     
-                                    <div>
+                                    <div className="relative">
                                         {eup.state === "uploading" ? (
-                                            <button className="btn btn-secondary pointer-events-none w-full loading">
-                                                Uploading metadata...
-                                            </button>
+                                            <div className="border rounded pointer-events-none w-full p-3 flex gap-3">
+                                            <Loader2 size={24} className="animate-spin"/>
+                                            Uploading metadata...
+                                        </div>
                                         ) : eup.state === "updating" ? (
-                                            <button className="btn btn-secondary pointer-events-none w-full loading">
-                                                Uploading metadata...
-                                            </button>
+                                            <div className="border rounded pointer-events-none w-full p-3 flex gap-3">
+                                                <Loader2 size={24} className="animate-spin"/>
+                                                Updating NFT...
+                                            </div>
                                         ) : (
                                             <div className="flex my-3 gap-3">
                                                 <button className="btn btn-secondary w-1/4" onClick={() => setEditing(false)}>
@@ -185,14 +199,14 @@ export function Profile()  {
                                                 {eup.user.twitter && (
                                                     <LinkCard type="twitter" value={eup.user.twitter} />
                                                 )}
+                                                {eup.user.website && (
+                                                    <LinkCard type="website" value={eup.user.website} />
+                                                )}
                                                 {eup.user.discord && (
                                                     <LinkCard type="discord" value={eup.user.discord} />
                                                 )}
                                                 {eup.user.telegram && (
                                                     <LinkCard type="telegram" value={eup.user.telegram} />
-                                                )}
-                                                {eup.user.website && (
-                                                    <LinkCard type="website" value={eup.user.website} />
                                                 )}
                                             </div>
                                         </>
@@ -202,6 +216,7 @@ export function Profile()  {
                         }
                     </div>
                 </div>
+                </>
             )}
         </div>
     );

@@ -1,20 +1,29 @@
 import { useWallet } from "@solana/wallet-adapter-react";
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 
 export function Home()  {
-    const navigate = useNavigate();
-    const wallet = useWallet();
+    const { publicKey, connected } = useWallet();
 
-    useEffect(() => {
-        if (wallet.connected) {
-            navigate('/profile');
-        }
-    }, [wallet]);
     return (
-        <div>
-        <h1>Welcome to app!</h1>
-        <p>Get started by doing stuff.</p>
+        <div className="grid md:grid-cols-2 min-h-[75vh] items-center max-w-6xl mx-auto">
+            <div>
+                <h2 className="text-6xl font-bold">Eternal Users Protocol</h2>
+                <p className="opacity-80 mb-5 text-xl">On-chain user profile hosted on Arweave, <br /> managed on Solana.</p>
+                
+                {connected && publicKey ?
+                    (<a href={`/#/${publicKey?.toBase58()}`} className="btn btn-success text-lg">My Profile</a>) : (
+                    <WalletMultiButton>
+                        {connected ? `${publicKey?.toBase58().slice(0, 6)}...` : <>
+                            <p className="text-lg">
+                                Connect Wallet
+                            </p>
+                        </>}
+                    </WalletMultiButton>
+                )}
+            </div>
+            <div>
+                <img src="/example.png" className="" alt="" />
+            </div>
         </div>
     );
 }
