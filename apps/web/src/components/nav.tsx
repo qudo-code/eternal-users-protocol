@@ -5,7 +5,7 @@ export function Nav() {
     const { publicKey, connected } = useWallet();
   
     return (
-      <nav className="sticky top-0 flex justify-between items-center w-screen px-6 py-3 z-10">
+      <nav className="sticky top-0 flex justify-between items-center px-6 py-3 z-10">
       <h2 className="text-2xl font-semibold">EUP</h2>
       <div className="flex gap-3 flex-wrap">
           <WalletMultiButton>

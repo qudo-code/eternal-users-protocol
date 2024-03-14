@@ -38,7 +38,7 @@ function Root() {
   return (
     <StrictMode>
         <ConnectionProvider endpoint={endpoint}>
-          <WalletProvider wallets={[]}>
+          <WalletProvider wallets={[]} autoConnect={true}>
               <WalletModalProvider>
                 <HashRouter basename="/">
                   <App />
@@ -60,7 +60,7 @@ function App() {
       <main className="min-h-screen mx-auto max-w-4xl">
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="profile" element={<Profile />} />
+            <Route path="/:id" element={<Profile />} />
           </Routes>
       </main>
     </>
