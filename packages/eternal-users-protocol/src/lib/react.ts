@@ -32,7 +32,7 @@ export const RPC_ENDPOINT = "https://devnet.admin6074.workers.dev/"
 // export const RPC_ENDPOINT = "https://mainnet.admin6074.workers.dev/"
 
 export const useUmi = (wallet: WalletAdapter, rpc: string) => {
-  const umi = createUmi(rpc);
+  const umi = createUmi(rpc, { commitment: "confirmed", preflightCommitment: "confirmed" });
   umi
     .use(irysUploader({ priceMultiplier: 5, timeout: 60000 }))
     .use(mplTokenMetadata())
